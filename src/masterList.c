@@ -32,8 +32,9 @@ void exportMasterlist(unsigned char *masterList, int len)
 		unsigned char *ptr = ft_strstr(certificate, countryNameOID, len - 5);
 		ptr += 7;
 		char fileName[30] = {ptr[0], ptr[1], '_', 0};
-		char *time = getTime(certificate);
-		strncat(fileName, time, 12); // add timestamp to fileName
+		TIME *time = malloc(sizeof(TIME));
+		getTime(certificate, time);
+		strcat(fileName, time->begin); // add timestamp to fileName
 		strcat(fileName, "_CSCA.cer");
 		printf("file = %s\n", fileName);
 
@@ -42,6 +43,7 @@ void exportMasterlist(unsigned char *masterList, int len)
 		write(fd, certificate, len);
 		free(certificate);
 		close(fd);
+		free(time);
 		certList += len;
 	}
 	free(beginning);
@@ -72,9 +74,10 @@ void printInfos(unsigned char *masterList, int len)
 		}
 		else
 			printf("No common name ");
-		char *time = getTime(certificate);
-		printPrettyTime(time);
-	//	printf("%.12s\n", getTime(certificate));
+		TIME *time = malloc(sizeof(TIME));
+		getTime(certificate, time);
+		printPrettyTime(time->begin);
+		free(time);
 		free(certificate);
 		certList += len;
 	}

@@ -6,14 +6,13 @@ void usage(char **argv)
 	printf(" %-20s export all certificates in separate files\n", "--export-all");
 	printf(" %-20s export masterlist signer certificate\n", "--export-signer");
 	printf(" %-20s export CSCA\n", "--export-CSCA");
-	printf(" %-20s print countryName, commonName and date\n", "--print-infos");
+	printf(" %-20s print infos of all certificates\n", "--print-infos");
+	printf(" %-20s print validity of masterlist signer\n", "--print-validity");
 	exit(0);
 }
 
-void parseParams(int argc, char **argv, args **params)
+void parseParams(int argc, char **argv, ARGS **params)
 {
-	if (!(*params =  malloc(sizeof(args))))
-		exit(0);
 	(*params)->file = NULL;
 	(*params)->options = 0;
 
@@ -27,6 +26,8 @@ void parseParams(int argc, char **argv, args **params)
 			(*params)->options |= EXPORT_CSCA;
 		else if (strcmp(argv[i], "--print-infos") == 0)
 			(*params)->options |= PRINT_INFOS;
+		else if (strcmp(argv[i], "--print-validity") == 0)
+			(*params)->options |= PRINT_VALIDITY;
 		else if (argv[i][0] == '-')
 		{
 			printf("unknown option %s\n", argv[i]);
@@ -43,7 +44,7 @@ int main(int argc, char **argv)
 	if (argc < 3)
 		usage(argv);
 
-	args *params;
+	ARGS *params =  malloc(sizeof(ARGS));
 	parseParams(argc, argv, &params);
 
 	FILE *f;
@@ -65,6 +66,9 @@ int main(int argc, char **argv)
 		exportSigner(masterList, len, params);
 	if (params->options & PRINT_INFOS)
 		printInfos(masterList, len);
+	if (params->options & PRINT_VALIDITY)
+		printValidity(masterList, len);
 
+	free(params);
 	return (0);
 }

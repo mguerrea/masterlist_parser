@@ -55,7 +55,7 @@ void exportCert(unsigned char *ptr, int type)
 	close(fd);
 }
 
-void exportSigner(unsigned char *masterList, int len, args *params)
+void exportSigner(unsigned char *masterList, int len, ARGS *params)
 {
 	unsigned char *certList = getSignerCertificates(masterList, len);
 	unsigned char *ptr = certList;
@@ -70,4 +70,18 @@ void exportSigner(unsigned char *masterList, int len, args *params)
 	else if (*ptr == 0)
 		printf("CSCA is not included in the masterlist\n");
 	free(certList);
+}
+
+void printValidity(unsigned char *masterList, int len)
+{
+	unsigned char *certList = getSignerCertificates(masterList, len);
+	unsigned char *ptr = certList;
+
+	TIME *time = malloc(sizeof(TIME));
+	getTime(certList, time);
+	printf("%-20s", "Not valid before: ");
+	printPrettyTime(time->begin);
+	printf("%-20s", "Not valid after: ");
+	printPrettyTime(time->end);
+	free(time);
 }
