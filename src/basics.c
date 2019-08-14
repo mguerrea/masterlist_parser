@@ -52,3 +52,15 @@ void printPrettyTime(char *time)
 	printf("%c%c/%c%c/%c%c ", time[4], time[5], time[2], time[3], time[0], time[1]);
 	printf("%c%c:%c%c:%c%c\n", time[6], time[7], time[8], time[9], time[10], time[11]);
 }
+
+int		ft_strncmp(const unsigned char *s1, const unsigned char *s2, size_t n)
+{
+	size_t i;
+
+	i = 0;
+	while (i < n - 1 && s1[i] == s2[i])
+		i++;
+	if (n == 0)
+		return (0);
+	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
+}

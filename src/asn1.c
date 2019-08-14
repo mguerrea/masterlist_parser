@@ -39,3 +39,20 @@ void getTime(unsigned char *ptr, TIME *time)
 	ptr += 15; // go to next
 	strncat(time->end, (char *)ptr, 12);
 }
+
+char *getSerialNumber(unsigned char *ptr)
+{
+	ptr += (ptr[1] < 128) ? 2 : 2 + ptr[1] - 128; // skip offset for first sequence
+	ptr += (ptr[1] < 128) ? 2 : 2 + ptr[1] - 128; // skip offset for second sequence
+	ptr += 5; // skip version
+
+	int len = getLength(ptr);
+	ptr += (ptr[1] < 128) ? 2 : 2 + ptr[1] - 128; // skip offset
+
+	char str[60];
+	for (int i = 0; i < len; i++)
+		sprintf(str + i * 2, "%02x", ptr[i]);
+	long num = strtol(str, NULL, 16);
+	sprintf(str, "%ld", num);
+	return(strdup(str));
+}

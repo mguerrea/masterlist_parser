@@ -1,6 +1,6 @@
 NAME = masterlist_parser
 
-SRC_NAME = basics.c masterList.c signerCertificates.c main.c asn1.c
+SRC_NAME = basics.c masterList.c signerCertificates.c main.c asn1.c linkedList.c
 
 INC_NAME = masterlist.h
 

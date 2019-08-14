@@ -31,10 +31,13 @@ void exportMasterlist(unsigned char *masterList, int len)
 
 		unsigned char *ptr = ft_strstr(certificate, countryNameOID, len - 5);
 		ptr += 7;
-		char fileName[30] = {ptr[0], ptr[1], '_', 0};
+		char fileName[200] = {ptr[0], ptr[1], '_', 0};
 		TIME *time = malloc(sizeof(TIME));
 		getTime(certificate, time);
 		strcat(fileName, time->begin); // add timestamp to fileName
+		strcat(fileName, "_");
+		char *serialNumber = getSerialNumber(certificate);
+		strcat(fileName, serialNumber);
 		strcat(fileName, "_CSCA.cer");
 		printf("file = %s\n", fileName);
 
@@ -81,4 +84,39 @@ void printInfos(unsigned char *masterList, int len)
 		free(certificate);
 		certList += len;
 	}
+}
+
+void findCert(unsigned char *masterList, int len, ARGS *params)
+{
+	unsigned char *certList = getCertificateList(masterList, len);
+	unsigned char *beginning = certList;
+
+	FILE *f;
+	if ((f = fopen(params->cert->content, "rb")) == NULL)
+	{
+		perror(NULL);
+		exit(0);
+	}
+	fseek(f, 0, SEEK_END);
+	long certLen = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	unsigned char *cert = malloc(certLen + 1);
+	fread(cert, 1, certLen, f);
+	fclose(f);
+
+	while (*certList)
+	{
+		int size = getLength(certList);
+		size += (certList[1] < 128) ? 2 : 2 + certList[1] - 128;
+		if (size == certLen && ft_strncmp(certList, cert, certLen) == 0)
+		{
+			printf("%s: found\n", params->cert->content);
+			break;
+		}
+		certList += size;
+	}
+	if (*certList == 0)
+		printf("%s: not found\n", params->cert->content);
+	free(cert);
+	free(beginning);
 }

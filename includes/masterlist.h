@@ -7,6 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef struct list
+{
+	char *content;
+	struct list *next;
+} LIST;
+
 typedef enum options
 {
 	EXPORT_ALL = 1 << 0,
@@ -20,6 +26,7 @@ typedef struct args
 {
 	OPTIONS options;
 	char *file;
+	LIST *cert;
 } ARGS;
 
 typedef struct time
@@ -38,5 +45,11 @@ void printMemory(unsigned char *ptr, int len); // for debug purposes
 void printInfos(unsigned char *masterList, int len);
 void printPrettyTime(char *time);
 void printValidity(unsigned char *masterList, int len);
+void findCert(unsigned char *masterList, int len, ARGS *params);
+LIST *lstnew(char *content);
+void lstaddback(LIST **list, LIST *new);
+void	lstdel(LIST **alst);
+char *getSerialNumber(unsigned char *ptr);
+int	ft_strncmp(const unsigned char *s1, const unsigned char *s2, size_t n);
 
 #endif
