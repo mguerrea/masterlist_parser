@@ -4,8 +4,7 @@ void usage(char **argv, char *error)
 {
 	if (error)
 		printf("%s\n", error);
-	printf("usage : %s [options]\nwhere options are\n", argv[0]);
-	printf(" %-20s input file (mandatory)\n", "-in file");
+	printf("usage : %s -in file [options]\nwhere options are\n", argv[0]);
 	printf(" %-20s input format (DER or PEM (default))\n", "-inform fmt");
 	printf(" %-20s find if certs (DER) are in masterlist\n", "-find file(s)");
 	printf(" %-20s export all certificates in separate files\n", "--export-all");
