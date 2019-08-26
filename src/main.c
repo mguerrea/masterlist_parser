@@ -121,6 +121,8 @@ long readPEM(char *file, unsigned char **masterList, char **argv)
 
 int main(int argc, char **argv)
 {
+	if (argc == 1)
+		usage(argv, NULL);
 	ARGS *params =  malloc(sizeof(ARGS));
 	parseParams(argc, argv, &params);
 
