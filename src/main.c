@@ -5,11 +5,12 @@ void usage(char **argv, char *error)
 	if (error)
 		printf("%s\n", error);
 	printf("usage : %s [options]\nwhere options are\n", argv[0]);
-	printf(" %-20s input file (DER)\n", "-in arg");
-	printf(" %-20s find if args (DER) are in masterlist\n", "-find args");
+	printf(" %-20s input file (mandatory)\n", "-in file");
+	printf(" %-20s input format (DER or PEM (default))\n", "-inform fmt");
+	printf(" %-20s find if certs (DER) are in masterlist\n", "-find file(s)");
 	printf(" %-20s export all certificates in separate files\n", "--export-all");
 	printf(" %-20s export masterlist signer certificate\n", "--export-signer");
-	printf(" %-20s export CSCA\n", "--export-CSCA");
+	printf(" %-20s export CSCA which signed the masterlist\n", "--export-CSCA");
 	printf(" %-20s print infos of all certificates\n", "--print-infos");
 	printf(" %-20s print validity of masterlist signer\n", "--print-validity");
 
@@ -35,6 +36,7 @@ void parseParams(int argc, char **argv, ARGS **params)
 	(*params)->file = NULL;
 	(*params)->options = 0;
 	(*params)->cert = NULL;
+	(*params)->format = NULL;
 
 	for (int i = 1; i < argc; i++)
 	{
@@ -44,6 +46,13 @@ void parseParams(int argc, char **argv, ARGS **params)
 				(*params)->file = argv[i + 1];
 			else
 				usage(argv, "-in: missing argument");
+		}
+		else if (strcmp(argv[i], "-inform") == 0)
+		{
+			if (argv[i + 1] && argv[i + 1][0] != '-')
+				(*params)->format = argv[i + 1];
+			else
+				usage(argv, "-inform: missing argument");
 		}
 		else if (strcmp(argv[i], "--export-all") == 0)
 			(*params)->options |= EXPORT_ALL;
@@ -64,16 +73,10 @@ void parseParams(int argc, char **argv, ARGS **params)
 		usage(argv, "missing file");
 }
 
-int main(int argc, char **argv)
+long readDER(char *file, unsigned char **masterList, char **argv)
 {
-	if (argc < 4)
-		usage(argv, "too few arguments");
-
-	ARGS *params =  malloc(sizeof(ARGS));
-	parseParams(argc, argv, &params);
-
 	FILE *f;
-	if ((f = fopen(params->file, "rb")) == NULL)
+	if ((f = fopen(file, "rb")) == NULL)
 	{
 		perror(NULL);
 		exit(0);
@@ -81,10 +84,56 @@ int main(int argc, char **argv)
 	fseek(f, 0, SEEK_END);
 	long len = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	unsigned char *masterList = malloc(len + 1);
-	fread(masterList, 1, len, f);
+	*masterList = malloc(len + 1);
+	fread(*masterList, 1, len, f);
 	fclose(f);
+	if ((*masterList)[0] != 48)
+		usage(argv, "wrong format");
+	return len;
+}
 
+long readPEM(char *file, unsigned char **masterList, char **argv)
+{
+	long finalLen;
+	FILE *f;
+	char *str;
+	if ((f = fopen(file, "r")) == NULL)
+	{
+		perror(NULL);
+		exit(0);
+	}
+	fseek(f, 0, SEEK_END);
+	long len = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	str = malloc(len + 1);
+	fread(str, 1, len, f);
+	fclose(f);
+	if (str[1] < 0)
+		usage(argv, "wrong format");
+	if (strncmp("pkdMasterListContent: ", str, 22) == 0)
+	{
+		str += 22;
+		len -= 22;
+	}
+	*masterList = base64_decode(str, len, &finalLen);
+	return(finalLen);
+}
+
+int main(int argc, char **argv)
+{
+	ARGS *params =  malloc(sizeof(ARGS));
+	parseParams(argc, argv, &params);
+
+	long len;
+	unsigned char *masterList;
+
+	if (!params->format || !strcmp(params->format, "pem") || !strcmp(params->format, "PEM"))
+		len = readPEM(params->file, &masterList, argv);
+	else if (!strcmp(params->format, "der") || !strcmp(params->format, "DER"))
+		len = readDER(params->file, &masterList, argv);
+	else
+		usage(argv, "invalid format");
+	
 	if (params->options & EXPORT_ALL)
 		exportMasterlist(masterList, len);
 	if (params->options & (EXPORT_CSCA | EXPORT_SIGNER))

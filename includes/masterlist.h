@@ -27,6 +27,7 @@ typedef struct args
 	OPTIONS options;
 	char *file;
 	LIST *cert;
+	char *format;
 } ARGS;
 
 typedef struct time
@@ -51,5 +52,6 @@ void lstaddback(LIST **list, LIST *new);
 void	lstdel(LIST **alst);
 char *getSerialNumber(unsigned char *ptr);
 int	ft_strncmp(const unsigned char *s1, const unsigned char *s2, size_t n);
+unsigned char *base64_decode(const char *data, long input_length, long *output_length);
 
 #endif
